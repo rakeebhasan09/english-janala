@@ -26,3 +26,8 @@ body {
 	padding-left: 15px;
 	padding-right: 15px;
 }
+
+.btn-active {
+	background-color: #422ad5;
+	color: white;
+}

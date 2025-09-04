@@ -10,8 +10,9 @@ const displayLevels = (levels) => {
 		const btnDiv = document.createElement("div");
 		btnDiv.innerHTML = `
             <button
+                id="targetBtn${level.level_no}"
                 onclick='loadData(${level.level_no})'
-                class="py-[10px] px-[17px] border-[1px] border-[#422AD5] text-[#422AD5] text-[14px] font-semibold cursor-pointer rounded-lg flex items-center gap-x-[6px]"
+                class="tab-button py-[10px] px-[17px] border-[1px] border-[#422AD5] text-[#422AD5] text-[14px] font-semibold cursor-pointer rounded-lg flex items-center gap-x-[6px]"
             >
                 <i class="fa-solid fa-book-open-reader"></i>
                 Lesson - ${level.level_no}
@@ -25,7 +26,17 @@ const displayLevels = (levels) => {
 const loadData = (id) => {
 	fetch(`https://openapi.programming-hero.com/api/level/${id}`)
 		.then((dataRes) => dataRes.json())
-		.then((levelData) => displayLevelData(levelData.data));
+		.then((levelData) => {
+			// Remove Active Class Code
+			const activedButtons = document.querySelectorAll(".tab-button");
+			for (const activedButton of activedButtons) {
+				activedButton.classList.remove("btn-active");
+			}
+			// Add Active Class Code
+			const activeButton = document.getElementById(`targetBtn${id}`);
+			activeButton.classList.add("btn-active");
+			displayLevelData(levelData.data);
+		});
 };
 
 // Display Level Data
@@ -86,7 +97,4 @@ const displayLevelData = (allData) => {
         `;
 		wordParent.appendChild(wordCard);
 	}
-
-	console.log(dataParent);
-	console.log(allData);
 };
