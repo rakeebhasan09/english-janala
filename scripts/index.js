@@ -1,7 +1,23 @@
+function pronounceWord(word) {
+	const utterance = new SpeechSynthesisUtterance(word);
+	utterance.lang = "en-EN"; // English
+	window.speechSynthesis.speak(utterance);
+}
+
 // Levels Buttons Code
 fetch("https://openapi.programming-hero.com/api/levels/all")
 	.then((levelRes) => levelRes.json())
 	.then((levels) => displayLevels(levels.data));
+
+const manageSpinner = (status) => {
+	if (status === true) {
+		document.getElementById("spinner").classList.remove("hidden");
+		document.getElementById("lessons-contents").classList.add("hidden");
+	} else {
+		document.getElementById("lessons-contents").classList.remove("hidden");
+		document.getElementById("spinner").classList.add("hidden");
+	}
+};
 
 // Display Tab Buttons
 const displayLevels = (levels) => {
@@ -24,6 +40,7 @@ const displayLevels = (levels) => {
 
 // Load Data By Button Clicking
 const loadData = (id) => {
+	manageSpinner(true);
 	fetch(`https://openapi.programming-hero.com/api/level/${id}`)
 		.then((dataRes) => dataRes.json())
 		.then((levelData) => {
@@ -61,6 +78,7 @@ const displayLevelData = (allData) => {
                 </h2>
             </div>
         `;
+		manageSpinner(false);
 		return;
 	}
 
@@ -83,11 +101,13 @@ const displayLevelData = (allData) => {
                 </div>
                 <div class="pt-6 lg:pt-[56px] flex items-center justify-between">
                     <button
+                        onclick="loadWordDetail(${word.id})"
                         class="w-14 h-14 flex items-center justify-center cursor-pointer bg-[rgba(26,145,255,0.10)] rounded-lg"
                     >
                         <i class="fa-solid fa-circle-info text-[18px]"></i>
                     </button>
                     <button
+                        onclick="pronounceWord('${word.word}')"
                         class="w-14 h-14 flex items-center justify-center cursor-pointer bg-[rgba(26,145,255,0.10)] rounded-lg"
                     >
                         <i class="fa-solid fa-volume-high text-[18px]"></i>
@@ -97,4 +117,87 @@ const displayLevelData = (allData) => {
         `;
 		wordParent.appendChild(wordCard);
 	}
+	manageSpinner(false);
 };
+
+const loadWordDetail = async (id) => {
+	const url = `https://openapi.programming-hero.com/api/word/${id}`;
+	const res = await fetch(url);
+	const wordDetailData = await res.json();
+	displayWordDetails(wordDetailData.data);
+};
+
+const displayWordDetails = (word) => {
+	const wordDetailsContainer = document.getElementById(
+		"word-details-container"
+	);
+	const getSynonyms = (synonymsArray) => {
+		if (!synonymsArray || synonymsArray.length === 0)
+			return "<li>Not Found</li>";
+		return synonymsArray
+			.map(
+				(syn) =>
+					`<li class='py-[6px] px-5 border-[1px] border-[#D7E4EF] bg-[#D7E4EF] rounded-[6px] text-[#000] text-[20px] font-normal capitalize'>${syn}</li>`
+			)
+			.join("");
+	};
+
+	wordDetailsContainer.innerHTML = `
+        <div>
+            <h3 class="text-[#000] text-[36px] font-semibold mb-8">
+                ${word.word ? word.word : "Not Found"} ( 
+                <i class="fa-solid fa-microphone-lines"></i> :${
+					word.pronunciation ? word.pronunciation : "Not Found"
+				})
+            </h3>
+            <p
+                class="text-[#000] text-[24px] font-semibold mb-[10px]"
+            >
+                Meaning
+            </p>
+            <p
+                class="text-[#000] text-[24px] font-medium Hind-Siliguri mb-8"
+            >
+                ${word.meaning ? word.meaning : "Not Found"}
+            </p>
+            <p class="text-[#000] text-[24px] font-semibold">
+                Example
+            </p>
+            <p class="text-[#000] text-[24px] font-normal mb-8">
+                ${word.sentence ? word.sentence : "Not Found"}
+            </p>
+            <p
+                class="text-[#000] text-[24px] font-medium Hind-Siliguri"
+            >
+                সমার্থক শব্দ গুলো
+            </p>
+            <ul id="synoname-parent" class="flex items-center gap-x-[18px]">
+                ${getSynonyms(word.synonyms)}
+            </ul>
+        </div>
+    `;
+
+	document.getElementById("word_details_modal").showModal();
+};
+
+document.getElementById("search-btn").addEventListener("click", () => {
+	// Remove Active Class Code
+	const activedButtons = document.querySelectorAll(".tab-button");
+	for (const activedButton of activedButtons) {
+		activedButton.classList.remove("btn-active");
+	}
+	const searchValue = document
+		.getElementById("search-input")
+		.value.trim()
+		.toLowerCase();
+
+	fetch("https://openapi.programming-hero.com/api/words/all")
+		.then((res) => res.json())
+		.then((data) => {
+			const allWords = data.data;
+			const filterWord = allWords.filter((word) =>
+				word.word.toLowerCase().includes(searchValue)
+			);
+			displayLevelData(filterWord);
+		});
+});
